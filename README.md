@@ -3,7 +3,7 @@ The draft to Project 2. Language = R
 
 Draft needs to be an RMD and a knitted HTML
 
-**Also upload any files: **
+**Also Upload any Files: **
 1) bundibugyo_NP.fasta
 + Is the fasta file for the Bundibugyo Ebolaviruses nucleoprotein. https://www.ncbi.nlm.nih.gov/nuccore/NC_014373.1?report=fasta&from=56&to=3014
 
