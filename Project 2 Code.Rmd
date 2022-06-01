@@ -1,0 +1,200 @@
+---
+title: "Project 2 Code"
+output:
+  html_document:
+    df_print: paged
+---
+
+**Introduction**
+
+Scientific Question: What are the genetic differences, in terms of RNA sequences and protein structures of the nucleoprotein common to ebolaviruses, between the Tai Forest ebolavirus and Bundibugyo ebolavirus that originated in Africa as well as the Reston ebolavirus found in the Philippines?
+
+Hypothesis: If the Tai Forest ebolavirus and Bundibugyo ebolavirus both arose in Africa and developed under similar conditions to infect humans, then there would be more similarities in the RNA sequences and protein structure of the nucleoprotein between them than with the Reston ebolavirus from the Philippines that does not affect humans.
+
+Loading Packages
+```{r}
+#install.packages("bio3d", dependencies=TRUE)
+library(BiocManager)
+library(Biostrings)
+# if (!requireNamespace("BiocManager", quietly=TRUE))
+#     install.packages("BiocManager")
+# BiocManager::install("DECIPHER")
+library(DECIPHER)
+library(ggplot2)
+library(ggseqlogo)
+library(bio3d)
+library(muscle)
+#needed for both parts
+library(msa)
+#install.packages("NGLVieweR")
+library(NGLVieweR)
+
+```
+
+Part 1: Multiple Sequence Alignment
+```{r}
+#calling in all the fasta files for each Ebolavirus and combing them into a single vector
+Ebola_seq_NP <- c("C:/Users/Elizabeth/Documents/BIMM143-S22/data_project_2/reston_NP.fasta", "C:/Users/Elizabeth/Documents/BIMM143-S22/data_project_2/tai_forest_NP.fasta", "C:/Users/Elizabeth/Documents/BIMM143-S22/data_project_2/bundibugyo_NP.fasta")
+
+#Read the files into an XStringSet object
+Ebola_seq_unaligned <- readAAStringSet(Ebola_seq_NP)
+#check datatype
+typeof(Ebola_seq_unaligned)
+
+#to use msaPRettyPrint(), uncomment code below
+#system.file("tex", "texshade.sty", package="msa")
+
+#Perform Multiple sequence alignment using the msa(function) and assign it to a vector
+Ebola_NP <- msa(Ebola_seq_unaligned)
+
+#print the complete msa
+print(Ebola_NP, show="complete")
+
+#this is for creating a phylogenetic cluster - may or may not use
+Ebola_NP2 <- msaConvert(Ebola_NP, type="seqinr::alignment")
+```
+
+
+```{r}
+#was testing out how to potentially create a phylogenetic tree - will talk with TA about this
+library(seqinr)
+d <- as.matrix(dist.alignment(Ebola_NP2, matrix = "similarity"))
+
+#NC_004161.1 = Reston
+#NC_014372.1 = Tai Forest
+#NC_014373.1 = Bundibugyo
+
+library(ape)
+PhyloTree <- njs(d)
+plot(PhyloTree, main="Phylogenetic Tree of Ebolavirus Sequences")
+
+```
+
+```{r}
+#used DECIPHER package to cluster the sequences
+library(DECIPHER)
+
+#perform a distance matrix on the XStringSet object created previously with readAAStringSet()function
+d <- DistanceMatrix(Ebola_seq_unaligned)
+
+#cluster the sequences. Had to play around with the cutoff to find where it seperated into 2 cluster and not 3
+# at cutoff=45, we are getting cluster numbers at 55% identity
+c <- IdClusters(d, method="complete", cutoff=0.45)
+head(c)
+
+```
+
+
+
+```{r}
+#attempted to create sequence logo but its a bit of a mess and is not really useful for analysis in this form - will discuss with TA
+require(ggplot2)
+require(ggseqlogo)
+
+Ebola_NP_character <- as.character(Ebola_NP)
+typeof(Ebola_NP_character)
+
+#this is a sequence logo of all three sequences
+ggseqlogo(Ebola_NP_character, facet = "wrap", scales = "free_x")
+```
+
+```{r}
+#gonna attempt to perform seq logo on comparison groups
+#not sure how to accurately read this though
+require(ggplot2)
+require(ggseqlogo)
+
+Ebola_NP_character <- as.character(Ebola_NP)
+typeof(Ebola_NP_character)
+
+#comparing reston and tai forest
+ggseqlogo(Ebola_NP_character[1:2], facet = "wrap", scales = "free_x")
+#comparing tai forest and bundibugyo
+ggseqlogo(Ebola_NP_character[2:3], facet = "wrap", scales = "free_x")
+
+#comparing reston and bundibugyo
+ggseqlogo(Ebola_NP_character[c(1,3)], facet = "wrap", scales = "free_x")
+
+```
+
+
+Part 2: Find RMSD of A chain of Nucleoprotein (C-Terminal Domain)
+
+Create files
+```{r}
+#maybe make this a for loop?
+#read in pdb files from online
+reston_pdb <- read.pdb('5w2b')
+taiforest_pdb <- read.pdb('5e2x')
+bundibugyo_pdb <- read.pdb('5dsd')
+
+#to focus on just chain A of each nucleoprotein, use the trim.pdb() function and select just chain A of each pdb
+reston_a <- trim.pdb(reston_pdb, chain="A")
+taiforest_a <- trim.pdb(taiforest_pdb, chain="A")
+bundibugyo_a <- trim.pdb(bundibugyo_pdb, chain="A")
+
+#create new pdbs for just chain A of each ebolavirus using the write.pdb() function. Name the files
+write.pdb(reston_a, file="reston_a.pdb")
+write.pdb(taiforest_a, file="taiforest_a.pdb")
+write.pdb(bundibugyo_a, file="bundibugyo_a.pdb")
+
+```
+Image chain A of the Reston, Tai Forest, and Bundibugyo nucleoproteins 
+```{r}
+#Load local pdb file
+#make this into a for loop or something later 
+NGLVieweR("reston_a.pdb") %>%
+ stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
+  addRepresentation("cartoon",
+    param = list(name = "cartoon", colorScheme = "residueindex"))
+
+NGLVieweR("taiforest_a.pdb") %>%
+ stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
+  addRepresentation("cartoon",
+    param = list(name = "cartoon", colorScheme = "residueindex"))
+
+NGLVieweR("bundibugyo_a.pdb") %>%
+ stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
+  addRepresentation("cartoon",
+    param = list(name = "cartoon", colorScheme = "residueindex"))
+```
+Find the RMSD values of chain A. RMSD is the standard measure of structural distance between coordinate sets. The smaller an RMSD value is, the more closely related the two structures are
+```{r}
+
+#combine the chain A pdb files into one vector
+files <- c("reston_a.pdb", "taiforest_a.pdb", "bundibugyo_a.pdb")
+
+#align the files using the pdbaln() function.
+#the exefile=msa part is needed to help run this because having just muscle installed via library(muscle) is not enough. 
+pdbs <- pdbaln(files, exefile='msa')
+
+# Gap positions
+inds <- gap.inspect(pdbs$xyz)
+
+# Perform superposition before pairwise RMSD by setting fit=TRUE
+rmsd(pdbs$xyz, fit=TRUE)
+
+# perform RMSD between structure 1 and all the other structures in alignment
+rd <- rmsd(a=pdbs$xyz[1,], b=pdbs$xyz[2:3,], a.inds=inds$f.inds, b.inds=inds$f.inds, fit=TRUE)
+
+```
+
+```{r}
+# RMSD clustering
+
+#perform the simpler version of RMSD to call upon it
+rd <- rmsd(pdbs, fit=TRUE)
+
+#create a cluster via the distance between groups in the RMSD
+hc <- hclust(as.dist(rd))
+
+#plot the cluster created above
+plot(hc, ylab = "RMSD", main = "RMSD Cluster Dendrogram")
+
+```
+
+
+
+
+
+
