@@ -26,3 +26,9 @@ Draft needs to be an RMD and a knitted HTML
 + Scientific Question: What are the genetic differences, in terms of RNA sequences and protein structures of the nucleoprotein common to ebolaviruses, between the Tai Forest ebolavirus and Bundibugyo ebolavirus that originated in Africa as well as the Reston ebolavirus found in the Philippines?
 
 + Hypothesis: If the Tai Forest ebolavirus and Bundibugyo ebolavirus both arose in Africa and developed under similar conditions to infect humans, then there would be more similarities in the RNA sequences and protein structure of the nucleoprotein between them than with the Reston ebolavirus from the Philippines that does not affect humans.
+
+Method 1: Multiple Sequence Alignment
+Analysis 1: still deciding. attempted sequence logo and phylogenetic tree
+
+Method 2: viewing structures and finding RMSD values
+Analysis 2: Heirarchical clustering
